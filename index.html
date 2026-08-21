@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>José Augusto Almeida Santos — Inteligência de mercado, dados e IA aplicada a negócios</title>
-<meta name="description" content="Sócio na LEVER Inteligência de Mercado e instrutor no Senac-ES. Estruturação de inteligência de mercado, dados e treinamentos de IA aplicada a negócios.">
+<meta name="description" content="Sócio na LEVER e instrutor no Senac-ES. Inteligência de mercado, dados e treinamentos de IA aplicada a negócios. 21 organizações atendidas, 148 profissionais formados.">
 <meta name="author" content="José Augusto Almeida Santos">
 <link rel="canonical" href="https://joseaugustoals.github.io/">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="pt_BR">
 <meta property="og:url" content="https://joseaugustoals.github.io/">
 <meta property="og:title" content="José Augusto Almeida Santos">
-<meta property="og:description" content="Inteligência de mercado, dados e IA aplicada a negócios. Sócio na LEVER e instrutor no Senac-ES.">
+<meta property="og:description" content="Inteligência de mercado, dados e IA aplicada a negócios. 21 organizações atendidas, 148 profissionais formados, 198h de sala.">
 <meta name="twitter:card" content="summary">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2218%22 fill=%22%23101820%22/><text x=%2250%22 y=%2268%22 font-family=%22Helvetica,Arial%22 font-size=%2252%22 font-weight=%22bold%22 fill=%22%2338A9C4%22 text-anchor=%22middle%22>JA</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,7 +23,6 @@
     --ink-2:#3A4450;
     --ink-3:#6E7883;
     --paper:#FBFBFC;
-    --panel:#F1F3F5;
     --line:#DDE1E6;
     --accent:#0A6E8A;
     --accent-soft:#E4F0F4;
@@ -35,42 +34,25 @@
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
   body{
-    background:var(--paper);
-    color:var(--ink-2);
-    font-family:var(--body);
-    font-size:16px;
-    line-height:1.65;
+    background:var(--paper);color:var(--ink-2);
+    font-family:var(--body);font-size:16px;line-height:1.65;
     -webkit-font-smoothing:antialiased;
   }
   .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
 
-  /* ---------- eyebrow / section labels ---------- */
-  .eyebrow{
-    font-family:var(--mono);
-    font-size:11px;
-    letter-spacing:.16em;
-    text-transform:uppercase;
-    color:var(--accent);
-  }
-
-  /* ---------- hero ---------- */
+  /* hero */
   .hero{padding:76px 0 44px}
-  .hero .eyebrow{display:block;margin-bottom:22px}
   h1{
-    font-family:var(--display);
-    font-weight:700;
+    font-family:var(--display);font-weight:700;
     font-size:clamp(2.35rem,7vw,4.1rem);
-    line-height:1.02;
-    letter-spacing:-.025em;
-    color:var(--ink);
-    max-width:14ch;
+    line-height:1.02;letter-spacing:-.025em;
+    color:var(--ink);max-width:14ch;
   }
-  .lede{
-    margin-top:26px;
-    max-width:60ch;
-    font-size:1.0625rem;
-    color:var(--ink-2);
+  .tagline{
+    margin-top:18px;font-family:var(--mono);font-size:12px;
+    letter-spacing:.15em;text-transform:uppercase;color:var(--accent);
   }
+  .lede{margin-top:26px;max-width:60ch;font-size:1.0625rem;color:var(--ink-2)}
   .lede strong{color:var(--ink);font-weight:600}
   .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
   .btn{
@@ -85,42 +67,32 @@
   .btn-ghost:hover{border-color:var(--ink)}
   .btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 
-  /* ---------- signature: painel de indicadores ---------- */
+  /* painel de indicadores */
   .readout{
-    border-top:1px solid var(--ink);
-    border-bottom:1px solid var(--line);
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    margin-top:56px;
+    border-top:1px solid var(--ink);border-bottom:1px solid var(--line);
+    display:grid;grid-template-columns:repeat(4,1fr);margin-top:56px;
   }
   .metric{padding:22px 20px 20px;border-left:1px solid var(--line)}
   .metric:first-child{border-left:0;padding-left:0}
   .metric .n{
-    font-family:var(--mono);
-    font-variant-numeric:tabular-nums;
-    font-size:clamp(1.5rem,3.6vw,2rem);
-    font-weight:500;
-    color:var(--ink);
-    line-height:1;
-    display:block;
+    font-family:var(--mono);font-variant-numeric:tabular-nums;
+    font-size:clamp(1.5rem,3.6vw,2rem);font-weight:500;
+    color:var(--ink);line-height:1;display:block;
   }
-  .metric .k{
-    display:block;margin-top:10px;
-    font-size:.8125rem;line-height:1.4;color:var(--ink-3);
-  }
+  .metric .k{display:block;margin-top:10px;font-size:.8125rem;line-height:1.4;color:var(--ink-3)}
+  .sectors{margin-top:14px;font-size:.8125rem;color:var(--ink-3);max-width:70ch}
 
-  /* ---------- sections ---------- */
+  /* seções */
   section{padding:60px 0}
   section + section{border-top:1px solid var(--line)}
   h2{
-    font-family:var(--mono);
-    font-size:11px;font-weight:500;
+    font-family:var(--mono);font-size:11px;font-weight:500;
     letter-spacing:.16em;text-transform:uppercase;
     color:var(--accent);margin-bottom:30px;
   }
   h3{
-    font-family:var(--display);
-    font-weight:500;font-size:1.25rem;line-height:1.25;
+    font-family:var(--display);font-weight:500;
+    font-size:1.25rem;line-height:1.25;
     letter-spacing:-.012em;color:var(--ink);
   }
 
@@ -128,29 +100,42 @@
   .cols h3{font-size:1.0625rem;margin-bottom:10px}
   .cols p{font-size:.9375rem}
 
+  /* credenciais */
+  .credential{
+    display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:start;
+    padding-top:28px;border-top:1px solid var(--line);margin-top:28px;
+  }
+  .credential.first{border-top:0;padding-top:0;margin-top:0}
+  .credential h3{margin-bottom:10px}
+  .credential p{font-size:.9375rem}
+  .countries{font-family:var(--mono);font-size:.8125rem;color:var(--ink);line-height:2.1}
+  .countries span{
+    border-bottom:1px solid var(--accent);padding-bottom:2px;
+    margin-right:14px;white-space:nowrap;
+  }
+  .degrees{font-size:.9375rem;color:var(--ink-2)}
+  .degrees li{list-style:none;padding:7px 0;border-bottom:1px solid var(--line)}
+  .degrees li:last-child{border-bottom:0}
+
+  /* casos */
   .case + .case{margin-top:44px}
   .case h3{margin-bottom:14px}
   .case p{max-width:68ch;margin-bottom:12px}
   .result{
-    margin-top:18px;padding:16px 20px;
-    background:var(--accent-soft);
-    border-left:3px solid var(--accent);
-    color:var(--ink);font-weight:500;
-    font-size:.9375rem;max-width:68ch;
+    margin-top:18px;padding:16px 20px;background:var(--accent-soft);
+    border-left:3px solid var(--accent);color:var(--ink);
+    font-weight:500;font-size:.9375rem;max-width:68ch;
   }
 
   .roles{font-size:.9375rem;max-width:72ch}
   .roles strong{color:var(--ink);font-weight:600}
   .meta{margin-top:26px;font-size:.8125rem;color:var(--ink-3);max-width:78ch}
-  .meta + .meta{margin-top:12px}
   .meta b{
-    display:block;
-    font-family:var(--mono);font-size:10px;font-weight:500;
-    letter-spacing:.14em;text-transform:uppercase;
-    color:var(--ink);margin-bottom:5px;
+    display:block;font-family:var(--mono);font-size:10px;font-weight:500;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:5px;
   }
 
-  /* ---------- contato ---------- */
+  /* contato */
   .contact{background:var(--ink);color:#AEB7C0;padding:56px 0 44px;margin-top:8px}
   .contact h2{color:#5FC4DE}
   .contact a{color:#fff;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.28)}
@@ -166,7 +151,7 @@
     font-size:.75rem;color:#6E7883;
   }
 
-  /* ---------- entrada ---------- */
+  /* entrada */
   .fade{opacity:0;transform:translateY(10px);animation:rise .7s cubic-bezier(.2,.7,.3,1) forwards}
   .fade:nth-child(2){animation-delay:.07s}
   .fade:nth-child(3){animation-delay:.14s}
@@ -176,14 +161,14 @@
     html{scroll-behavior:auto}
   }
 
-  /* ---------- responsivo ---------- */
+  /* responsivo */
   @media (max-width:760px){
     .hero{padding:52px 0 32px}
     .readout{grid-template-columns:repeat(2,1fr);margin-top:40px}
     .metric{border-left:0;border-top:1px solid var(--line);padding:18px 0}
     .metric:first-child,.metric:nth-child(2){border-top:0}
     .metric:nth-child(2n){padding-left:20px;border-left:1px solid var(--line)}
-    .cols{grid-template-columns:1fr;gap:28px}
+    .cols,.credential{grid-template-columns:1fr;gap:24px}
     .contact-grid{grid-template-columns:1fr;gap:18px}
     section{padding:44px 0}
     .actions .btn{flex:1 1 100%;justify-content:center}
@@ -194,14 +179,13 @@
 
 <header class="hero">
   <div class="wrap">
-    <span class="eyebrow fade">Inteligência de mercado · Dados · IA aplicada</span>
     <h1 class="fade">José Augusto Almeida&nbsp;Santos</h1>
+    <p class="tagline fade">Inteligência de mercado · Dados · IA aplicada a negócios</p>
     <p class="lede fade">
-      Sócio na <strong>LEVER Inteligência de Mercado</strong>, onde lidero as frentes de Dados,
-      Tecnologia e Inteligência. Instrutor no <strong>Senac-ES</strong>,
-      <strong>Google Product Expert</strong> nível Diamante e presidente do
-      <strong>Cindes Jovem</strong>. Trabalho na fronteira entre dado, decisão e execução —
-      transformo informação dispersa em direção comercial clara.
+      Sócio na <strong>LEVER Inteligência de Mercado</strong>, onde lidero as frentes de Dados e
+      Tecnologia. Instrutor no <strong>Senac-ES</strong>, <strong>Google Product Expert</strong>
+      nível Diamante e presidente do <strong>Cindes Jovem</strong>. Trabalho na fronteira entre
+      dado, decisão e execução — transformo informação dispersa em direção comercial clara.
     </p>
     <div class="actions fade">
       <a class="btn btn-primary" href="https://wa.me/5527997008494">Falar no WhatsApp</a>
@@ -209,11 +193,13 @@
     </div>
 
     <div class="readout">
-      <div class="metric"><span class="n">3</span><span class="k">regionais de vendas com painel em tempo real</span></div>
-      <div class="metric"><span class="n">100+</span><span class="k">representantes acompanhando as próprias vendas</span></div>
-      <div class="metric"><span class="n">80+</span><span class="k">profissionais formados em IA e dados</span></div>
-      <div class="metric"><span class="n">300+</span><span class="k">pessoas alcançadas em palestras</span></div>
+      <div class="metric"><span class="n">21</span><span class="k">organizações atendidas</span></div>
+      <div class="metric"><span class="n">148</span><span class="k">profissionais formados</span></div>
+      <div class="metric"><span class="n">198h</span><span class="k">de sala em treinamentos</span></div>
+      <div class="metric"><span class="n">425+</span><span class="k">pessoas alcançadas</span></div>
     </div>
+    <p class="sectors">Indústria, varejo, serviços, tecnologia, startups, terceiro setor e
+       instituições de representação empresarial. Presencial e online.</p>
   </div>
 </header>
 
@@ -225,7 +211,7 @@
         <div>
           <h3>Treinamentos e educação corporativa</h3>
           <p>Programas de IA aplicada, Power BI e inteligência de dados para times comerciais,
-             operacionais e de gestão. Em formato in-company ou aberto, com foco em uso imediato.</p>
+             operacionais e de gestão. In-company, aberto ou online, com foco em uso imediato.</p>
         </div>
         <div>
           <h3>Inteligência de mercado e dados</h3>
@@ -235,9 +221,51 @@
         </div>
         <div>
           <h3>Palestras e mentorias</h3>
-          <p>IA, dados e transformação digital para eventos empresariais e setoriais. Mentoria
-             individual para executivos que precisam incorporar IA na própria rotina.</p>
+          <p>IA, dados e transformação digital para eventos empresariais, setoriais e acadêmicos.
+             Mentoria para executivos e para fundadores de startups: 5 startups mentoradas nos
+             programas TXM Method e Abstartups, da ideação à tração.</p>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Formação e credenciais</h2>
+
+      <div class="credential first">
+        <div>
+          <h3>Google Experts Program</h3>
+          <p>Google Product Expert nível Diamante, mentor e embaixador desde 2018. Participo
+             anualmente das conferências internacionais do programa, que reúnem especialistas de
+             dezenas de países.</p>
+        </div>
+        <div class="countries">
+          <span>Estados Unidos</span><span>Alemanha</span><span>Irlanda</span><span>Reino Unido</span><span>México</span>
+        </div>
+      </div>
+
+      <div class="credential">
+        <div>
+          <h3>Reconhecimento</h3>
+          <p>Moção de Aplausos da Câmara Municipal de Vitória (2025), pelo trabalho à frente do
+             Cindes Jovem na realização do Feirão do Imposto.</p>
+        </div>
+        <div></div>
+      </div>
+
+      <div class="credential">
+        <div>
+          <h3>Formação acadêmica</h3>
+          <p>Base em tecnologia com especialização em vendas, inteligência comercial e análise de
+             dados — a combinação que sustenta a atuação entre o dado e a decisão de negócio.</p>
+        </div>
+        <ul class="degrees">
+          <li>Especialização em Análise de Dados e Big Data — Doctum</li>
+          <li>MBA em Gestão de Negócios Inovadores — Centro Universitário Integrado</li>
+          <li>MBA em Gestão Prática de Vendas e Inteligência Comercial — Doctum</li>
+          <li>Tecnologia da Informação — Estácio</li>
+        </ul>
       </div>
     </div>
   </section>
@@ -262,10 +290,21 @@
 
       <article class="case">
         <h3>Formação de profissionais em IA e dados</h3>
-        <p>Instrutor no Senac-ES em IA para Negócios, Power BI e Inteligência de Dados, com
-           programas voltados à aplicação imediata na rotina de trabalho.</p>
-        <p class="result">Mais de 8 turmas, 80 profissionais formados e 300 pessoas alcançadas em
-           palestras.</p>
+        <p>Instrutor no Senac-ES em IA para Negócios, Power BI e Inteligência de Dados, além de
+           módulos de dados em programas corporativos. Já foram 198 horas de sala concluídas, em
+           turmas presenciais e online.</p>
+        <p>Também conduzi formação em IA para o corpo de instrutores do Senac-ES, unidade EPHE,
+           sobre aplicação de IA na preparação de aulas e no ambiente acadêmico.</p>
+        <p class="result">148 profissionais formados, em organizações de indústria, varejo,
+           serviços, tecnologia e terceiro setor.</p>
+      </article>
+
+      <article class="case">
+        <h3>Palestras para públicos distintos</h3>
+        <p>Universidades, entidades empresariais, eventos de liderança no interior do estado e
+           turmas técnicas — do público universitário ao empresarial, adaptando linguagem sem
+           perder profundidade.</p>
+        <p class="result">13 palestras e mais de 425 pessoas alcançadas.</p>
       </article>
     </div>
   </section>
@@ -275,7 +314,6 @@
       <h2>Onde atuo</h2>
       <p class="roles">
         Instrutor de IA para Negócios, Power BI e Inteligência de Dados no <strong>Senac-ES</strong> ·
-        <strong>Google Product Expert</strong> (Diamante), mentor e embaixador ·
         Presidente do <strong>Cindes Jovem</strong> (Findes) ·
         Diretor de Integração da <strong>Conaje</strong>
       </p>
@@ -284,12 +322,6 @@
         Eletrosolda Logística e Importação — Gestor de TI (2014–2021) ·
         DocSystem Corporation — Consultor (2015–2017) ·
         Pequim Têxtil — Supervisor de TI (2011–2013)
-      </p>
-      <p class="meta"><b>Formação</b>
-        Tecnologia da Informação (Estácio) ·
-        MBA em Gestão Prática de Vendas e Inteligência Comercial (Doctum) ·
-        MBA em Gestão de Negócios Inovadores (Centro Universitário Integrado) ·
-        Especialização em Análise de Dados e Big Data (Doctum)
       </p>
     </div>
   </section>
