@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FitCoach</title>
+<meta name="description" content="Personal trainer e nutricionista com IA: fotos das refeições, calorias, atividade física e ajuste da meta de peso.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0E1116" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F6F7F9" media="(prefers-color-scheme: light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FitCoach">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+  :root{
+    --bg:#F6F7F9; --card:#FFFFFF; --ink:#12161C; --ink-2:#4A535E; --ink-3:#8A929C;
+    --line:#E3E6EA; --accent:#16A34A; --accent-ink:#FFFFFF; --accent-soft:#E7F6EC;
+    --warn:#D97706; --warn-soft:#FDF3E3; --bad:#DC2626; --bad-soft:#FDECEC;
+    --blue:#2563EB; --blue-soft:#E8EFFD;
+    --radius:16px; --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.04);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0E1116; --card:#171B22; --ink:#EEF1F4; --ink-2:#B4BCC6; --ink-3:#7D8691;
+      --line:#262C35; --accent:#22C55E; --accent-ink:#06210F; --accent-soft:#12301E;
+      --warn:#F59E0B; --warn-soft:#33260C; --bad:#F87171; --bad-soft:#3A1717;
+      --blue:#60A5FA; --blue-soft:#14233C; --shadow:none;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0E1116; --card:#171B22; --ink:#EEF1F4; --ink-2:#B4BCC6; --ink-3:#7D8691;
+    --line:#262C35; --accent:#22C55E; --accent-ink:#06210F; --accent-soft:#12301E;
+    --warn:#F59E0B; --warn-soft:#33260C; --bad:#F87171; --bad-soft:#3A1717;
+    --blue:#60A5FA; --blue-soft:#14233C; --shadow:none;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif;
+    font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased;
+    padding-top:env(safe-area-inset-top);
+    padding-bottom:calc(76px + env(safe-area-inset-bottom));
+    overscroll-behavior-y:none;
+  }
+  main{max-width:560px;margin:0 auto;padding:12px 16px 24px}
+  h1{font-size:28px;font-weight:700;letter-spacing:-.02em;margin:8px 0 2px}
+  h2{font-size:17px;font-weight:650;margin-bottom:10px}
+  h3{font-size:15px;font-weight:600}
+  .sub{color:var(--ink-3);font-size:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-top:14px;box-shadow:var(--shadow)}
+  .row{display:flex;align-items:center;gap:10px}
+  .between{justify-content:space-between}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .muted{color:var(--ink-2)} .tiny{font-size:12px;color:var(--ink-3)}
+  .num{font-variant-numeric:tabular-nums}
+  .big{font-size:34px;font-weight:700;letter-spacing:-.02em}
+  .hidden{display:none !important}
+
+  /* ring */
+  .ringwrap{display:flex;align-items:center;gap:18px}
+  .ring{position:relative;width:132px;height:132px;flex:none}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  .ring .center b{font-size:26px;letter-spacing:-.02em}
+  .ring .center span{font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em}
+  .eq{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px;flex:1}
+  .eq dt{color:var(--ink-2)} .eq dd{text-align:right;font-weight:600}
+  .eq .tot{border-top:1px solid var(--line);padding-top:4px}
+
+  .bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:6px}
+  .bar i{display:block;height:100%;border-radius:99px;background:var(--accent)}
+  .macro{font-size:13px}
+  .macro b{font-size:15px}
+
+  /* buttons & inputs */
+  button,.btn{
+    font:inherit;font-weight:600;border:0;border-radius:12px;padding:12px 16px;cursor:pointer;
+    background:var(--accent);color:var(--accent-ink);display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    -webkit-tap-highlight-color:transparent;min-height:46px;
+  }
+  button:active{transform:scale(.98)}
+  button:disabled{opacity:.5}
+  .btn-2{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+  .btn-ghost{background:transparent;color:var(--blue);padding:8px 4px;min-height:auto}
+  .btn-bad{background:var(--bad-soft);color:var(--bad)}
+  .full{width:100%}
+  label{display:block;font-size:13px;color:var(--ink-2);margin:10px 0 4px}
+  input,select,textarea{
+    font:inherit;font-size:16px;width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);
+    background:var(--bg);color:var(--ink);
+  }
+  textarea{min-height:76px;resize:vertical}
+  input:focus,select,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+  .seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
+  .seg button{flex:1;background:transparent;color:var(--ink-2);min-height:38px;padding:8px;border-radius:9px;font-size:14px}
+  .seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+
+  /* lists */
+  .list{list-style:none}
+  .list li{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+  .list li:first-child{border-top:0}
+  .list .grow{flex:1;min-width:0}
+  .list .name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .thumb{width:46px;height:46px;border-radius:10px;object-fit:cover;background:var(--bg);flex:none;display:flex;align-items:center;justify-content:center;font-size:22px}
+  .x{background:transparent;color:var(--ink-3);min-height:auto;padding:6px;font-size:18px}
+
+  .pill{display:inline-block;padding:3px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--accent-soft);color:var(--accent)}
+  .pill.warn{background:var(--warn-soft);color:var(--warn)}
+  .pill.bad{background:var(--bad-soft);color:var(--bad)}
+  .pill.blue{background:var(--blue-soft);color:var(--blue)}
+
+  .verdict{border-radius:var(--radius);padding:16px;margin-top:14px}
+  .verdict.ok{background:var(--accent-soft)} .verdict.warn{background:var(--warn-soft)} .verdict.bad{background:var(--bad-soft)}
+  .verdict h3{font-size:18px;margin-bottom:6px}
+
+  .photo-drop{
+    border:2px dashed var(--line);border-radius:var(--radius);padding:22px;text-align:center;color:var(--ink-2);
+    display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;
+  }
+  .photo-drop .ico{font-size:36px}
+  .previews{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .previews img{width:84px;height:84px;object-fit:cover;border-radius:12px}
+
+  table.items{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+  table.items td,table.items th{padding:6px 4px;border-top:1px solid var(--line);text-align:left}
+  table.items th{font-size:12px;color:var(--ink-3);font-weight:500;border-top:0}
+  table.items td.r,table.items th.r{text-align:right}
+  table.items input{padding:6px 8px;font-size:15px;border-radius:8px}
+  table.items input.n{width:68px;text-align:right}
+
+  .chart{width:100%;height:auto;display:block}
+  .chart text{fill:var(--ink-3);font-size:10px}
+
+  .callout{background:var(--blue-soft);color:var(--ink);border-radius:12px;padding:12px 14px;font-size:14px;margin-top:10px}
+  .callout b{color:var(--blue)}
+  ol.steps{padding-left:20px;font-size:14px;color:var(--ink-2)} ol.steps li{margin:6px 0}
+  code{font-family:ui-monospace,Menlo,monospace;font-size:13px;background:var(--bg);padding:1px 5px;border-radius:6px;border:1px solid var(--line);word-break:break-all}
+
+  .spinner{width:18px;height:18px;border-radius:50%;border:2.5px solid currentColor;border-right-color:transparent;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* tabbar */
+  nav.tabs{
+    position:fixed;left:0;right:0;bottom:0;z-index:10;background:color-mix(in srgb,var(--card) 92%,transparent);
+    backdrop-filter:saturate(1.6) blur(16px);-webkit-backdrop-filter:saturate(1.6) blur(16px);
+    border-top:1px solid var(--line);display:flex;justify-content:space-around;
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+  }
+  nav.tabs button{
+    flex:1;background:transparent;color:var(--ink-3);flex-direction:column;gap:2px;font-size:11px;font-weight:500;
+    min-height:50px;padding:4px 2px;border-radius:10px;
+  }
+  nav.tabs button svg{width:24px;height:24px}
+  nav.tabs button.on{color:var(--accent)}
+  nav.tabs .plus{color:var(--accent)}
+  nav.tabs .plus .circle{width:40px;height:40px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center}
+
+  .toast{
+    position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom));z-index:20;
+    background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;max-width:calc(100% - 32px);
+    box-shadow:0 6px 24px rgba(0,0,0,.2);
+  }
+  details summary{cursor:pointer;font-weight:600;list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  details summary::after{content:"›";float:right;transform:rotate(90deg);color:var(--ink-3)}
+  details[open] summary::after{transform:rotate(-90deg)}
+</style>
+</head>
+<body>
+<main id="app"></main>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="hoje" class="on">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Hoje
+  </button>
+  <button data-tab="atividade">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Atividade
+  </button>
+  <button data-tab="registrar" class="plus">
+    <span class="circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+  </button>
+  <button data-tab="doce">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 11a5 5 0 0 1 10 0v1H7z"/><path d="M8 12l1.5 9h5L16 12"/><circle cx="12" cy="5" r="1.5"/></svg>Doce
+  </button>
+  <button data-tab="progresso">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19V5M4 19h16"/><path d="M7 15l4-4 3 3 5-6"/></svg>Progresso
+  </button>
+</nav>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
