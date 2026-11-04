@@ -1,4 +1,5 @@
 // FitCoach — personal trainer + nutricionista com IA (PWA, dados ficam só no seu iPhone)
+import { FOODS } from './foods.js';
 const STORE_KEY = 'fitcoach.v1';
 const SDK_URL = './vendor/anthropic-sdk-1.1.0.mjs';
 
@@ -10,6 +11,7 @@ const defaultState = () => ({
   days: {},      // 'YYYY-MM-DD' -> {meals:[], acts:[], health:null}
   weights: [],   // [{date, kg}]
   coachLog: [],  // [{date, headline, adjust}]
+  favorites: [], // [{id, name, type, kcal, p, c, f, items}]
 });
 let S = load();
 let tab = S.profile ? 'hoje' : 'ajustes';
@@ -49,6 +51,7 @@ function prettyDate(dateStr) {
   return new Date(dateStr + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
 }
 function toast(msg, ms = 2600) {
+  $$('.toast').forEach((old) => old.remove());
   const t = document.createElement('div');
   t.className = 'toast'; t.textContent = msg;
   document.body.appendChild(t);
@@ -343,9 +346,10 @@ function renderHoje() {
       ${meals.length ? `<ul class="list">${meals.map((m) => `
         <li>
           ${m.thumb ? `<img class="thumb" src="${m.thumb}" alt="">` : `<div class="thumb">${MEAL_ICONS[m.type] || '🍴'}</div>`}
-          <div class="grow"><div class="name">${esc(m.name)}</div>
+          <div class="grow"><div class="name" style="white-space:normal">${esc(m.name)}</div>
             <div class="tiny">${esc(m.type)} · ${esc(m.time)} · P ${r0(m.p)} · C ${r0(m.c)} · G ${r0(m.f)}</div></div>
           <b class="num">${fmt(m.kcal)}</b>
+          <button class="x" data-star-meal="${m.id}" aria-label="Favoritar">${isFavorite(m.name) ? '★' : '☆'}</button>
           <button class="x" data-del-meal="${m.id}" aria-label="Apagar">×</button>
         </li>`).join('')}</ul>` : `<p class="sub">Nada registrado ainda. Tire uma foto do prato ou descreva o que comeu.</p>`}
     </div>
@@ -366,6 +370,12 @@ function renderHoje() {
       <div style="margin-top:8px"><button class="btn-ghost" data-go="progresso">Ver no Progresso ›</button></div></div>` : ''}
   `;
   bindCommon();
+  $$('[data-star-meal]').forEach((b) => b.onclick = () => {
+    const m = day().meals.find((x) => x.id === b.dataset.starMeal);
+    if (isFavorite(m.name)) { S.favorites = S.favorites.filter((f) => norm(f.name) !== norm(m.name)); toast('Removido dos favoritos'); }
+    else { addFavorite(m); toast('Adicionado aos favoritos ⭐'); }
+    save(); render();
+  });
   $$('[data-del-meal]').forEach((b) => b.onclick = () => {
     if (!confirm('Apagar esta refeição?')) return;
     const D = day(); D.meals = D.meals.filter((m) => m.id !== b.dataset.delMeal); save(); render();
@@ -373,19 +383,70 @@ function renderHoje() {
 }
 
 /* ----- REGISTRAR ----- */
-let regMode = 'foto';
+let regMode = null;
 let regPhotos = [];
+let plate = [];        // itens montados pela busca de alimentos
+let searchQuery = '';
+const norm = (s) => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const REG_MODES = [['foto', '📷', 'Foto'], ['buscar', '🔎', 'Buscar'], ['favoritos', '⭐', 'Favoritos'], ['texto', '✍️', 'Texto'], ['manual', '🔢', 'Manual']];
+function pluralUnit(label) {
+  // "unidade" → "unidades", "colher de sopa" → "colheres de sopa", "fatia média" → "fatias médias"
+  if (/^(meia|meio|1\/2|long)\b/i.test(label)) return label;
+  const pl = (w) => /ão$/i.test(w) ? w.slice(0, -2) + 'ões' : /[rz]$/i.test(w) ? w + 'es' : /[aeiouáéíóúâêô]$/i.test(w) ? w + 's' : /p$/i.test(w) ? w + 's' : w;
+  const words = label.split(' ');
+  words[0] = pl(words[0]);
+  if (words[1] && /^(média|médio|pequena|pequeno|grande|drenada|ralada|raso|fundo)$/i.test(words[1])) words[1] = pl(words[1]);
+  return words.join(' ');
+}
+function foodItem(food, qty, unitIx) {
+  const [name, kcal, p, c, f, measures] = food;
+  const unit = measures[unitIx];
+  const grams = unit ? qty * unit[1] : qty;
+  const k = grams / 100;
+  const qtyTxt = String(r1(qty)).replace('.', ',');
+  return { name, portion: unit ? `${qtyTxt} ${qty > 1 ? pluralUnit(unit[0]) : unit[0]} (${r0(grams)} g)` : `${r0(grams)} g`,
+    kcal: kcal * k, protein_g: p * k, carbs_g: c * k, fat_g: f * k };
+}
+function recentMeals() {
+  const seen = new Set(); const out = [];
+  for (let i = 0; i <= 21 && out.length < 8; i++) {
+    const D = S.days[addDays(today(), -i)]; if (!D) continue;
+    for (const m of [...D.meals].reverse()) {
+      const key = norm(m.name); if (seen.has(key) || m.type === 'Doce') continue;
+      seen.add(key); out.push(m); if (out.length >= 8) break;
+    }
+  }
+  return out;
+}
+function isFavorite(name) { return S.favorites.some((f) => norm(f.name) === norm(name)); }
+function addFavorite(m) {
+  if (isFavorite(m.name)) return false;
+  S.favorites.push({ id: uid(), name: m.name, type: m.type, kcal: r0(m.kcal), p: r1(m.p), c: r1(m.c), f: r1(m.f), items: m.items || [] });
+  return true;
+}
+function logMeal(m, date = viewDate) {
+  day(date).meals.push({ id: uid(), type: m.type, name: m.name, time: new Date().toTimeString().slice(0, 5),
+    kcal: r0(m.kcal), p: r1(m.p), c: r1(m.c), f: r1(m.f), thumb: m.thumb || null, items: m.items || [] });
+}
 function renderRegistrar() {
   if (draft) return renderDraft();
+  if (!regMode) regMode = S.settings.apiKey ? 'foto' : 'buscar';
   const T = dayTotals();
   app.innerHTML = `
     ${header('Registrar', `${prettyDate(viewDate)} · restam ${fmt(Math.max(0, T.remaining))} kcal`)}
     <div class="card">
-      <div class="seg" id="seg">
-        <button data-m="foto" class="${regMode === 'foto' ? 'on' : ''}">📷 Foto</button>
-        <button data-m="texto" class="${regMode === 'texto' ? 'on' : ''}">✍️ Texto</button>
-        <button data-m="manual" class="${regMode === 'manual' ? 'on' : ''}">🔢 Manual</button>
+      <div class="seg seg-ico" id="seg">
+        ${REG_MODES.map(([m, ico, label]) => `<button data-m="${m}" class="${regMode === m ? 'on' : ''}"><span>${ico}</span>${label}</button>`).join('')}
       </div>
+
+      <div class="${regMode === 'buscar' ? '' : 'hidden'}" style="margin-top:14px">
+        <input id="fq" type="search" placeholder="Buscar alimento (ex.: ovo, arroz, banana)" value="${esc(searchQuery)}" autocomplete="off">
+        <div id="fres"></div>
+        <div id="plate"></div>
+        <p class="tiny" style="margin-top:10px">Valores aproximados da Tabela TACO (Unicamp) e USDA. Não achou? Use Foto, Texto ou Manual.</p>
+      </div>
+
+      <div class="${regMode === 'favoritos' ? '' : 'hidden'}" style="margin-top:14px" id="favs"></div>
 
       <div class="${regMode === 'foto' ? '' : 'hidden'}" style="margin-top:14px">
         <label class="photo-drop" for="ph">
@@ -413,12 +474,16 @@ function renderRegistrar() {
         </div>
       </div>
 
-      <button class="full" id="go" style="margin-top:16px">${regMode === 'manual' ? 'Continuar' : '✨ Calcular calorias com IA'}</button>
-      ${!S.settings.apiKey && regMode !== 'manual' ? `<p class="tiny" style="margin-top:8px">Para usar a IA, adicione sua chave da API em <a href="#" data-go="ajustes">Ajustes</a>.</p>` : ''}
+      <div class="${['foto', 'texto', 'manual'].includes(regMode) ? '' : 'hidden'}">
+        <button class="full" id="go" style="margin-top:16px">${regMode === 'manual' ? 'Continuar' : '✨ Calcular calorias com IA'}</button>
+        ${!S.settings.apiKey && regMode !== 'manual' ? `<p class="tiny" style="margin-top:8px">Para usar a IA, adicione sua chave da API em <a href="#" data-go="ajustes">Ajustes</a>. Sem chave, use Buscar, Favoritos ou Manual.</p>` : ''}
+      </div>
     </div>
   `;
   bindCommon();
   $$('#seg button').forEach((b) => b.onclick = () => { regMode = b.dataset.m; render(); });
+  if (regMode === 'buscar') bindSearch();
+  if (regMode === 'favoritos') renderFavs();
   $('#ph').onchange = async (e) => {
     const files = [...e.target.files]; if (!files.length) return;
     try { regPhotos = regPhotos.concat(await prepPhotos(files)).slice(-4); }
@@ -448,6 +513,111 @@ function renderRegistrar() {
       btn.disabled = false; btn.textContent = '✨ Calcular calorias com IA';
     }
   };
+}
+function bindSearch() {
+  const q = $('#fq');
+  const showResults = () => {
+    searchQuery = q.value;
+    const res = $('#fres');
+    const words = norm(q.value.trim()).split(/\s+/).filter(Boolean);
+    if (!words.length) { res.innerHTML = ''; return; }
+    const hits = FOODS.map((f, i) => [f, i, norm(f[0])])
+      .filter(([, , n]) => words.every((w) => n.includes(w)))
+      .sort((a, b) => a[2].indexOf(words[0]) - b[2].indexOf(words[0]) || a[2].length - b[2].length)
+      .slice(0, 12);
+    res.innerHTML = hits.length ? `<ul class="list" style="margin-top:6px">${hits.map(([f, i]) => {
+      const m = f[5][0];
+      return `<li data-food="${i}" style="cursor:pointer"><div class="grow"><div class="name">${esc(f[0])}</div>
+        <div class="tiny">${m ? `1 ${esc(m[0])} ≈ ${r0((f[1] * m[1]) / 100)} kcal · ` : ''}${f[1]} kcal/100 g</div></div>
+        <span class="pill blue">+</span></li>`;
+    }).join('')}</ul>` : `<p class="sub" style="margin-top:10px">Nada encontrado para “${esc(q.value)}”.</p>`;
+    $$('[data-food]', res).forEach((li) => li.onclick = () => openFood(+li.dataset.food));
+  };
+  q.oninput = showResults;
+  showResults();
+  renderPlate();
+}
+function openFood(i) {
+  const f = FOODS[i];
+  $('#fres').innerHTML = `<div class="card" style="margin-top:10px;background:var(--bg);box-shadow:none">
+    <div class="row between"><h3>${esc(f[0])}</h3><button class="x" id="fclose" aria-label="Fechar">×</button></div>
+    <div class="grid2">
+      <div><label for="fqty">Quantidade</label><input id="fqty" inputmode="decimal" value="1"></div>
+      <div><label for="funit">Medida</label><select id="funit">
+        ${f[5].map(([u], ix) => `<option value="${ix}">${esc(u)}</option>`).join('')}<option value="-1">gramas</option>
+      </select></div>
+    </div>
+    <div id="fcalc" class="callout"></div>
+    <button class="full" id="fadd" style="margin-top:10px">Adicionar ao prato</button>
+  </div>`;
+  const calc = () => {
+    const it = foodItem(f, num($('#fqty').value), +$('#funit').value);
+    $('#fcalc').innerHTML = `<b>${fmt(it.kcal)} kcal</b> · P ${r0(it.protein_g)} g · C ${r0(it.carbs_g)} g · G ${r0(it.fat_g)} g<div class="tiny">${esc(it.portion)}</div>`;
+    return it;
+  };
+  $('#funit').onchange = () => { $('#fqty').value = $('#funit').value === '-1' ? '100' : '1'; calc(); };
+  $('#fqty').oninput = calc;
+  calc();
+  $('#fclose').onclick = () => bindSearch();
+  $('#fadd').onclick = () => {
+    if (num($('#fqty').value) <= 0) return toast('Informe a quantidade.');
+    plate.push(calc());
+    $('#fq').value = ''; searchQuery = '';
+    bindSearch();
+    toast(`${f[0]} adicionado ao prato`);
+  };
+}
+function renderPlate() {
+  const el = $('#plate'); if (!el) return;
+  if (!plate.length) { el.innerHTML = ''; return; }
+  const tot = plate.reduce((a, i) => a + i.kcal, 0);
+  el.innerHTML = `<div style="margin-top:16px">
+    <div class="row between"><h3>Seu prato</h3><b class="num">${fmt(tot)} kcal</b></div>
+    <ul class="list">${plate.map((i, ix) => `<li><div class="grow"><div class="name">${esc(i.name)}</div><div class="tiny">${esc(i.portion)}</div></div>
+      <b class="num">${fmt(i.kcal)}</b><button class="x" data-prm="${ix}" aria-label="Remover">×</button></li>`).join('')}</ul>
+    <button class="full" id="pgo" style="margin-top:8px">Continuar (${plate.length} ${plate.length > 1 ? 'itens' : 'item'})</button>
+  </div>`;
+  $$('[data-prm]', el).forEach((b) => b.onclick = () => { plate.splice(+b.dataset.prm, 1); renderPlate(); });
+  $('#pgo').onclick = () => {
+    const type = mealTypeByHour();
+    const name = plate.length === 1 ? `${plate[0].name} · ${plate[0].portion.replace(/ \(.*\)$/, '')}` : type;
+    draft = { type, name, thumb: null, confidence: null, notes: '', items: plate.map((i) => ({ ...i })) };
+    plate = [];
+    render();
+  };
+}
+function renderFavs() {
+  const el = $('#favs');
+  const rec = recentMeals();
+  el.innerHTML = `
+    <h3>Favoritos</h3>
+    ${S.favorites.length ? `<ul class="list">${S.favorites.map((f) => `<li>
+        <div class="thumb">${MEAL_ICONS[f.type] || '⭐'}</div>
+        <div class="grow"><div class="name" style="white-space:normal">${esc(f.name)}</div><div class="tiny num">${esc(f.type)} · P ${r0(f.p)} · C ${r0(f.c)} · G ${r0(f.f)}</div></div>
+        <b class="num">${fmt(f.kcal)}</b>
+        <button class="btn-2 addbtn" data-fav-add="${f.id}" aria-label="Registrar ${esc(f.name)}">+</button>
+        <button class="x" data-fav-del="${f.id}" aria-label="Remover dos favoritos">×</button></li>`).join('')}</ul>`
+      : `<p class="sub">Nenhum favorito ainda. Ao salvar uma refeição, marque “⭐ Salvar como favorito”, ou toque na ☆ de uma refeição recente abaixo.</p>`}
+    ${rec.length ? `<h3 style="margin-top:20px">Recentes</h3><ul class="list">${rec.map((m) => `<li>
+        ${m.thumb ? `<img class="thumb" src="${m.thumb}" alt="">` : `<div class="thumb">${MEAL_ICONS[m.type] || '🍴'}</div>`}
+        <div class="grow"><div class="name" style="white-space:normal">${esc(m.name)}</div><div class="tiny">${esc(m.type)}</div></div>
+        <b class="num">${fmt(m.kcal)}</b>
+        <button class="x" data-rec-star="${m.id}" aria-label="Favoritar">${isFavorite(m.name) ? '★' : '☆'}</button>
+        <button class="btn-2 addbtn" data-rec-add="${m.id}" aria-label="Registrar de novo">+</button></li>`).join('')}</ul>` : ''}`;
+  const done = (m) => { save(); toast(`Registrado ✅ ${fmt(m.kcal)} kcal`); render(); };
+  $$('[data-fav-add]', el).forEach((b) => b.onclick = () => { const f = S.favorites.find((x) => x.id === b.dataset.favAdd); logMeal(f); done(f); });
+  $$('[data-fav-del]', el).forEach((b) => b.onclick = () => {
+    const f = S.favorites.find((x) => x.id === b.dataset.favDel);
+    if (!confirm(`Remover “${f.name}” dos favoritos?`)) return;
+    S.favorites = S.favorites.filter((x) => x.id !== f.id); save(); render();
+  });
+  $$('[data-rec-add]', el).forEach((b) => b.onclick = () => { const m = rec.find((x) => x.id === b.dataset.recAdd); logMeal(m); done(m); });
+  $$('[data-rec-star]', el).forEach((b) => b.onclick = () => {
+    const m = rec.find((x) => x.id === b.dataset.recStar);
+    if (isFavorite(m.name)) S.favorites = S.favorites.filter((f) => norm(f.name) !== norm(m.name));
+    else { addFavorite(m); toast('Adicionado aos favoritos ⭐'); }
+    save(); render();
+  });
 }
 function draftTotals() {
   return draft.items.reduce((a, i) => ({ kcal: a.kcal + num(i.kcal), p: a.p + num(i.protein_g), c: a.c + num(i.carbs_g), f: a.f + num(i.fat_g) }), { kcal: 0, p: 0, c: 0, f: 0 });
@@ -484,6 +654,9 @@ function renderDraft() {
       <div class="callout" style="background:${after < 0 ? 'var(--bad-soft)' : 'var(--accent-soft)'}">
         Depois desta refeição: <b style="color:${after < 0 ? 'var(--bad)' : 'var(--accent)'}">${after < 0 ? `${fmt(-after)} kcal acima da meta` : `restam ${fmt(after)} kcal`}</b>
       </div>
+      <label class="row" style="margin-top:14px;font-size:15px;color:var(--ink);cursor:pointer">
+        <input type="checkbox" id="dfav" style="width:22px;height:22px;flex:none" ${draft.fav ? 'checked' : ''}> ⭐ Salvar também como favorito
+      </label>
       <div class="grid2" style="margin-top:14px">
         <button class="btn-2" id="cancel">Descartar</button>
         <button id="save">Salvar</button>
@@ -495,12 +668,14 @@ function renderDraft() {
     i.kcal = nw; i.protein_g *= f; i.carbs_g *= f; i.fat_g *= f; draft.name = $('#dn').value; draft.type = $('#dt').value; render();
   });
   $$('[data-rm]').forEach((b) => b.onclick = () => { draft.items.splice(+b.dataset.rm, 1); draft.name = $('#dn').value; draft.type = $('#dt').value; render(); });
+  $('#dfav').onchange = (e) => { draft.fav = e.target.checked; };
   $('#cancel').onclick = () => { draft = null; render(); };
   $('#save').onclick = () => {
     const tt = draftTotals();
-    day().meals.push({ id: uid(), type: $('#dt').value, name: $('#dn').value || 'Refeição', time: new Date().toTimeString().slice(0, 5),
-      kcal: r0(tt.kcal), p: r1(tt.p), c: r1(tt.c), f: r1(tt.f), thumb: draft.thumb, items: draft.items });
-    save(); draft = null; toast('Refeição salva ✅'); go('hoje');
+    const m = { type: $('#dt').value, name: $('#dn').value.trim() || 'Refeição', kcal: tt.kcal, p: tt.p, c: tt.c, f: tt.f, thumb: draft.thumb, items: draft.items };
+    logMeal(m);
+    const favAdded = $('#dfav').checked && addFavorite(m);
+    save(); draft = null; toast(favAdded ? 'Refeição salva e favoritada ⭐' : 'Refeição salva ✅'); go('hoje');
   };
 }
 
