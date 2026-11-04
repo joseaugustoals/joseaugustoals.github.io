@@ -1,5 +1,5 @@
 // FitCoach service worker: app funciona offline (exceto a IA)
-const CACHE = 'fitcoach-v1';
+const CACHE = 'fitcoach-v2';
 const SHELL = ['./', './index.html', './app.js', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png', './vendor/anthropic-sdk-1.1.0.mjs'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => {

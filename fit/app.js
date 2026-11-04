@@ -735,6 +735,27 @@ function weekChart() {
     }).join('')}
   </svg>`;
 }
+let weightHistoryOpen = false;
+function weightHistory() {
+  const ws = [...S.weights].sort((a, b) => b.date.localeCompare(a.date));
+  if (!ws.length) return '';
+  const wantsLoss = S.profile.goal < S.profile.startWeight;
+  const kgTxt = (n) => String(n).replace('.', ',');
+  return `<details style="margin-top:14px"${weightHistoryOpen ? ' open' : ''} id="whist">
+    <summary>Histórico de pesagens (${ws.length})</summary>
+    <ul class="list" style="margin-top:6px">${ws.map((w, i) => {
+      const prev = ws[i + 1]; const dlt = prev ? r1(w.kg - prev.kg) : null;
+      const cls = !dlt ? 'blue' : (dlt < 0) === wantsLoss ? '' : 'warn';
+      return `<li>
+        <div class="grow"><div class="name num">${kgTxt(w.kg)} kg</div>
+          <div class="tiny">${new Date(w.date + 'T12:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })}</div></div>
+        ${dlt != null ? `<span class="pill ${cls} num">${dlt > 0 ? '+' : ''}${kgTxt(dlt)}</span>` : ''}
+        <button class="btn-ghost" data-wedit="${w.date}">Editar</button>
+        <button class="x" data-wdel="${w.date}" aria-label="Apagar pesagem">×</button>
+      </li>`;
+    }).join('')}</ul>
+  </details>`;
+}
 function renderProgresso() {
   const p = S.profile, w = currentWeight(), P = plan();
   const t = weightTrend(21);
@@ -753,11 +774,13 @@ function renderProgresso() {
       </div>
       ${eta ? `<p class="tiny" style="margin-top:8px">No ritmo ${t ? 'atual' : 'planejado'}, você chega na meta por volta de <b>${eta}</b>.</p>` : ''}
       <div style="margin-top:12px">${weightChart()}</div>
-      <div class="row" style="margin-top:12px">
-        <input id="wkg" inputmode="decimal" placeholder="Peso de hoje (kg)" style="flex:1">
-        <button id="wadd">Salvar</button>
+      <div class="grid2" style="margin-top:12px">
+        <div><label for="wkg" style="margin-top:0">Peso (kg)</label><input id="wkg" inputmode="decimal" placeholder="ex.: 87,6"></div>
+        <div><label for="wdt" style="margin-top:0">Data</label><input id="wdt" type="date" value="${today()}" max="${today()}"></div>
       </div>
+      <button class="full" id="wadd" style="margin-top:10px">Salvar pesagem</button>
       <p class="tiny" style="margin-top:6px">Pese-se de manhã, em jejum, após ir ao banheiro. O app usa a tendência, não o número de um dia.</p>
+      ${weightHistory()}
     </div>
 
     <div class="card">
@@ -785,7 +808,26 @@ function renderProgresso() {
       <div id="coachres">${coachResult ? coachHTML(coachResult) : ''}</div>
     </div>`;
   bindCommon();
-  $('#wadd').onclick = () => { const kg = num($('#wkg').value); if (kg < 25 || kg > 400) return toast('Peso inválido.'); addWeight(today(), kg); save(); toast('Peso salvo'); render(); };
+  $('#wadd').onclick = () => {
+    const kg = num($('#wkg').value); const d = $('#wdt').value || today();
+    if (kg < 25 || kg > 400) return toast('Peso inválido.');
+    if (d > today()) return toast('A data não pode ser no futuro.');
+    const existed = S.weights.some((w) => w.date === d);
+    addWeight(d, kg); save(); toast(existed ? 'Pesagem atualizada' : 'Peso salvo'); render();
+  };
+  const wh = $('#whist'); if (wh) wh.ontoggle = () => { weightHistoryOpen = wh.open; };
+  $$('[data-wedit]').forEach((b) => b.onclick = () => {
+    const d = b.dataset.wedit; const cur = S.weights.find((w) => w.date === d);
+    const v = prompt(`Corrigir peso de ${new Date(d + 'T12:00').toLocaleDateString('pt-BR')} (kg):`, String(cur.kg).replace('.', ','));
+    if (v == null) return; const kg = num(v);
+    if (kg < 25 || kg > 400) return toast('Peso inválido.');
+    addWeight(d, kg); save(); toast('Pesagem corrigida'); render();
+  });
+  $$('[data-wdel]').forEach((b) => b.onclick = () => {
+    const d = b.dataset.wdel;
+    if (!confirm(`Apagar a pesagem de ${new Date(d + 'T12:00').toLocaleDateString('pt-BR')}?`)) return;
+    S.weights = S.weights.filter((w) => w.date !== d); save(); toast('Pesagem apagada'); render();
+  });
   $$('[data-apply]').forEach((b) => b.onclick = () => { S.adjust = (S.adjust || 0) + num(b.dataset.apply); S.coachLog.push({ date: today(), headline: 'Ajuste automático', adjust: num(b.dataset.apply) }); save(); toast('Meta ajustada'); render(); });
   const ra = $('#resetadj'); if (ra) ra.onclick = () => { S.adjust = 0; save(); render(); };
   $('#coach').onclick = async (ev) => {
